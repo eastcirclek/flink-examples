@@ -1,0 +1,14 @@
+group 'com.github.eastcirclek'
+version '1.0-SNAPSHOT'
+
+apply plugin: 'scala'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile 'org.apache.flink:flink-streaming-scala_2.11:1.4.2'
+}
