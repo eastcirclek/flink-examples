@@ -31,15 +31,19 @@ object SlidingEventTimeWindow {
       .addSource( (context: SourceContext[Char]) =>
         records foreach {
           case MyWatermark(timestamp) =>
+            println(s"Generate a watermark @ $timestamp")
             context.emitWatermark(new Watermark(timestamp))
+            Thread.sleep(100)
           case MyRecord(value, timestamp) =>
+            println(s"$value @ $timestamp")
             context.collectWithTimestamp(value, timestamp)
+            Thread.sleep(100)
         }
       )
       .timeWindowAll(milliseconds(10), milliseconds(5))
       .apply(
         (window, iterator, collector: Collector[String]) =>
-          collector.collect(window.toString + " : " + iterator.mkString(", "))
+          collector.collect(window + " triggered : " + iterator.mkString(","))
       )
       .print()
 
