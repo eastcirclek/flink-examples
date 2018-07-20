@@ -28,15 +28,15 @@ object SlidingEventTimeWindow {
     )
 
     env
-      .addSource( (context: SourceContext[Char]) =>
+      .addSource( (context: SourceContext[MyRecord]) =>
         records foreach {
           case MyWatermark(timestamp) =>
             println(s"Generate a watermark @ $timestamp")
             context.emitWatermark(new Watermark(timestamp))
             Thread.sleep(100)
-          case MyRecord(value, timestamp) =>
+          case record@MyRecord(value, timestamp) =>
             println(s"$value @ $timestamp")
-            context.collectWithTimestamp(value, timestamp)
+            context.collectWithTimestamp(record, timestamp)
             Thread.sleep(100)
         }
       )
