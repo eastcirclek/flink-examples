@@ -6,7 +6,6 @@ import org.apache.flink.util.Collector
 
 object CountWindow {
   def main(args: Array[String]): Unit = {
-
     val env = StreamExecutionEnvironment.getExecutionEnvironment
     env.setParallelism(1)
 
