@@ -3,28 +3,27 @@ package com.github.eastcirclek
 import org.apache.flink.api.scala._
 import org.apache.flink.streaming.api.TimeCharacteristic
 import org.apache.flink.streaming.api.functions.source.SourceFunction.SourceContext
-import org.apache.flink.streaming.api.watermark.Watermark
 import org.apache.flink.streaming.api.scala.StreamExecutionEnvironment
+import org.apache.flink.streaming.api.watermark.Watermark
+import org.apache.flink.streaming.api.windowing.assigners.EventTimeSessionWindows
 import org.apache.flink.streaming.api.windowing.time.Time._
 import org.apache.flink.util.Collector
 
-object SlidingEventTimeWindow {
+object SessionWindowWithoutDelayedEarlyResultTrigger {
   def main(args: Array[String]): Unit = {
     val env = StreamExecutionEnvironment.getExecutionEnvironment
     env.setParallelism(1)
     env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime)
 
-    // - Records, a@4, b@7, and c@12, are arriving out-of-order
-    // - TimeWindow{start=-5, end=5} is not going to be created
-    //     when 'a' arrives because the initial watermark is 5
-    val records = Seq(
-      MyWatermark(5),
-      MyRecord('b', 7),
-      MyRecord('a', 4),
-      MyWatermark(10),
-      MyRecord('c', 12),
-      MyWatermark(15),
-      MyWatermark(20)
+    val records = Seq[StreamElement](
+      MyRecord('a', 1),
+      MyRecord('b', 5),
+      MyRecord('d', 12, true),
+      MyRecord('c', 10),
+      MyWatermark(16),
+      MyWatermark(20),
+      MyWatermark(24),
+      MyWatermark(28)
     )
 
     env
@@ -40,10 +39,11 @@ object SlidingEventTimeWindow {
             Thread.sleep(100)
         }
       )
-      .timeWindowAll(milliseconds(10), milliseconds(5))
+      .windowAll(EventTimeSessionWindows.withGap(milliseconds(12)))
+      .trigger(new EarlyResultEventTimeTrigger[MyRecord](_.last))
       .apply(
         (window, iterator, collector: Collector[String]) =>
-          collector.collect(window + " triggered : " + iterator.mkString(","))
+          collector.collect(window.toString + " : " + iterator.mkString(", "))
       )
       .print()
 
