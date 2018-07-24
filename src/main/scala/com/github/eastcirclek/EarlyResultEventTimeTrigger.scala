@@ -9,8 +9,10 @@ class EarlyResultEventTimeTrigger[T](eval: (T => Boolean)) extends Trigger[T, Ti
       TriggerResult.FIRE
     } else {
       if (eval(element)) {
+        println(s"[onElement] $window - FIRE_AND_PURGE")
         TriggerResult.FIRE_AND_PURGE
       } else {
+        println(s"[onElement] $window - registerEventTimeTimer(${window.maxTimestamp})")
         ctx.registerEventTimeTimer(window.maxTimestamp)
         TriggerResult.CONTINUE
       }
@@ -18,6 +20,7 @@ class EarlyResultEventTimeTrigger[T](eval: (T => Boolean)) extends Trigger[T, Ti
   }
 
   override def onEventTime(time: Long, window: TimeWindow, ctx: Trigger.TriggerContext): TriggerResult = {
+    println(s"[onEventTime] $window $time")
     if (time == window.maxTimestamp) {
       TriggerResult.FIRE
     } else {
@@ -30,12 +33,14 @@ class EarlyResultEventTimeTrigger[T](eval: (T => Boolean)) extends Trigger[T, Ti
   }
 
   override def clear(window: TimeWindow, ctx: Trigger.TriggerContext): Unit = {
+    println(s"[clear] $window - deleteEventTimeTimer(${window.maxTimestamp})")
     ctx.deleteEventTimeTimer(window.maxTimestamp)
   }
 
   override def canMerge: Boolean = true
 
   override def onMerge(window: TimeWindow, ctx: Trigger.OnMergeContext): Unit = {
+    println(s"[onMerge] $window - registerEventTimeTimer(${window.maxTimestamp})")
     ctx.registerEventTimeTimer(window.maxTimestamp)
   }
 

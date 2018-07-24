@@ -8,18 +8,14 @@ class TrackingEventTimeTrigger[T](eval: (T => Boolean), delay: Long = 0) extends
     if (window.maxTimestamp <= ctx.getCurrentWatermark) {
       TriggerResult.FIRE
     } else {
-      if (eval(element)) {
-        TriggerResult.FIRE_AND_PURGE
-      } else {
-        println(s"[onElement] $window - registerEventTimeTimer(${window.maxTimestamp})")
-        ctx.registerEventTimeTimer(window.maxTimestamp)
-        TriggerResult.CONTINUE
-      }
+      println(s"[onElement] $window - registerEventTimeTimer(${window.maxTimestamp})")
+      ctx.registerEventTimeTimer(window.maxTimestamp)
+      TriggerResult.CONTINUE
     }
   }
 
   override def onEventTime(time: Long, window: TimeWindow, ctx: Trigger.TriggerContext): TriggerResult = {
-    println(s"onEventTime $time")
+    println(s"[onEventTime] $window $time")
     if (time == window.maxTimestamp) {
       TriggerResult.FIRE
     } else {

@@ -11,22 +11,17 @@ class DelayedEarlyResultEventTimeTrigger[T](eval: (T => Boolean), delay: Long = 
       if (eval(element)) {
         println(s"[onElement] $window - registerEventTimeTimer(${timestamp+delay} = ts_${timestamp} + delay_${delay})")
         ctx.registerEventTimeTimer(timestamp + delay)
-        TriggerResult.CONTINUE
       } else {
         println(s"[onElement] $window - registerEventTimeTimer(${window.maxTimestamp})")
         ctx.registerEventTimeTimer(window.maxTimestamp)
-        TriggerResult.CONTINUE
       }
+      TriggerResult.CONTINUE
     }
   }
 
   override def onEventTime(time: Long, window: TimeWindow, ctx: Trigger.TriggerContext): TriggerResult = {
     println(s"[onEventTime] $window $time")
-    if (time == window.maxTimestamp) {
-      TriggerResult.FIRE
-    } else {
-      TriggerResult.CONTINUE
-    }
+    TriggerResult.FIRE_AND_PURGE
   }
 
   override def onProcessingTime(time: Long, window: TimeWindow, ctx: Trigger.TriggerContext): TriggerResult = {

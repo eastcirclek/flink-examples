@@ -32,11 +32,11 @@ object SessionWindowWithoutEarlyResultTrigger {
           case MyWatermark(timestamp) =>
             println(s"Generate a watermark @ $timestamp")
             context.emitWatermark(new Watermark(timestamp))
-            Thread.sleep(100)
+            Thread.sleep(200)
           case record@MyRecord(value, timestamp, _) =>
             println(s"$value @ $timestamp")
             context.collectWithTimestamp(record, timestamp)
-            Thread.sleep(100)
+            Thread.sleep(200)
         }
       )
       .windowAll(EventTimeSessionWindows.withGap(milliseconds(12)))
