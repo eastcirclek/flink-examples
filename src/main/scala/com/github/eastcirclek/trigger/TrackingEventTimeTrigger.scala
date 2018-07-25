@@ -1,9 +1,9 @@
-package com.github.eastcirclek
+package com.github.eastcirclek.trigger
 
 import org.apache.flink.streaming.api.windowing.triggers.{Trigger, TriggerResult}
 import org.apache.flink.streaming.api.windowing.windows.TimeWindow
 
-class TrackingEventTimeTrigger[T](eval: (T => Boolean), delay: Long = 0) extends Trigger[T, TimeWindow] {
+class TrackingEventTimeTrigger[T] extends Trigger[T, TimeWindow] {
   override def onElement(element: T, timestamp: Long, window: TimeWindow, ctx: Trigger.TriggerContext): TriggerResult = {
     if (window.maxTimestamp <= ctx.getCurrentWatermark) {
       TriggerResult.FIRE
@@ -39,5 +39,5 @@ class TrackingEventTimeTrigger[T](eval: (T => Boolean), delay: Long = 0) extends
     ctx.registerEventTimeTimer(window.maxTimestamp)
   }
 
-  override def toString = "EarlyResultEventTimeTrigger()"
+  override def toString = "EventTimeTrigger()"
 }

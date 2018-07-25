@@ -1,5 +1,6 @@
-package com.github.eastcirclek
+package com.github.eastcirclek.trigger
 
+import com.github.eastcirclek.{MyRecord, MyWatermark, StreamElement}
 import org.apache.flink.api.scala._
 import org.apache.flink.streaming.api.TimeCharacteristic
 import org.apache.flink.streaming.api.functions.source.SourceFunction.SourceContext
@@ -17,13 +18,13 @@ object SessionWindowWithDelayedEarlyResultTrigger {
 
     val records = Seq[StreamElement](
       MyRecord('a', 1),
-      MyRecord('b', 5),
-      MyRecord('d', 12, true),
-      MyRecord('c', 10),
-      MyWatermark(16),
-      MyWatermark(20),
-      MyWatermark(24),
-      MyWatermark(28)
+      MyRecord('b', 3),
+      MyRecord('d', 6, true),
+      MyRecord('c', 5),
+      MyWatermark(7),
+      MyWatermark(8),
+      MyWatermark(9),
+      MyWatermark(10)
     )
 
     env
@@ -39,8 +40,8 @@ object SessionWindowWithDelayedEarlyResultTrigger {
             Thread.sleep(200)
         }
       )
-      .windowAll(EventTimeSessionWindows.withGap(milliseconds(12)))
-      .trigger(new DelayedEarlyResultEventTimeTrigger[MyRecord](_.last, 8))
+      .windowAll(EventTimeSessionWindows.withGap(milliseconds(3)))
+      .trigger(new DelayedEarlyResultEventTimeTrigger[MyRecord](_.last, 2))
       .apply(
         (window, iterator, collector: Collector[String]) =>
           collector.collect(window.toString + " : " + iterator.mkString(", "))

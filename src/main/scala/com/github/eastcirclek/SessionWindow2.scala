@@ -1,5 +1,6 @@
 package com.github.eastcirclek
 
+import com.github.eastcirclek.trigger.TrackingEventTimeTrigger
 import org.apache.flink.api.scala._
 import org.apache.flink.streaming.api.TimeCharacteristic
 import org.apache.flink.streaming.api.functions.source.SourceFunction.SourceContext
@@ -19,7 +20,8 @@ object SessionWindow2 {
       MyRecord('a', 1),
       MyRecord('c', 7),
       MyWatermark(5),
-      MyRecord('b', 4)
+      MyRecord('b', 4),
+      MyWatermark(10)
     )
 
     env
@@ -28,14 +30,15 @@ object SessionWindow2 {
           case MyWatermark(timestamp) =>
             println(s"Generate a watermark @ $timestamp")
             context.emitWatermark(new Watermark(timestamp))
-            Thread.sleep(100)
+            Thread.sleep(200)
           case record@MyRecord(value, timestamp, _) =>
             println(s"$value @ $timestamp")
             context.collectWithTimestamp(record, timestamp)
-            Thread.sleep(100)
+            Thread.sleep(200)
         }
       )
       .windowAll(EventTimeSessionWindows.withGap(milliseconds(3)))
+      .trigger(new TrackingEventTimeTrigger[MyRecord])
       .apply(
         (window, iterator, collector: Collector[String]) =>
           collector.collect(window.toString + " : " + iterator.mkString(", "))
