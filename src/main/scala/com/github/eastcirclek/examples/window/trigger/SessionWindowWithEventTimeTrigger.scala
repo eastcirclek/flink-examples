@@ -1,30 +1,31 @@
-package com.github.eastcirclek
+package com.github.eastcirclek.examples.window.trigger
 
+import com.github.eastcirclek.examples.{MyRecord, MyWatermark, StreamElement}
+import com.github.eastcirclek.flink.trigger.TrackingEventTimeTrigger
 import org.apache.flink.api.scala._
 import org.apache.flink.streaming.api.TimeCharacteristic
 import org.apache.flink.streaming.api.functions.source.SourceFunction.SourceContext
-import org.apache.flink.streaming.api.watermark.Watermark
 import org.apache.flink.streaming.api.scala.StreamExecutionEnvironment
+import org.apache.flink.streaming.api.watermark.Watermark
+import org.apache.flink.streaming.api.windowing.assigners.EventTimeSessionWindows
 import org.apache.flink.streaming.api.windowing.time.Time._
 import org.apache.flink.util.Collector
 
-object SlidingEventTimeWindow {
+object SessionWindowWithEventTimeTrigger {
   def main(args: Array[String]): Unit = {
     val env = StreamExecutionEnvironment.getExecutionEnvironment
     env.setParallelism(1)
     env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime)
 
-    // - Records, a@4, b@7, and c@12, are arriving out-of-order
-    // - TimeWindow{start=-5, end=5} is not going to be created
-    //     when 'a' arrives because the initial watermark is 5
-    val records = Seq(
-      MyWatermark(5),
-      MyRecord('b', 7),
-      MyRecord('a', 4),
-      MyWatermark(10),
-      MyRecord('c', 12),
-      MyWatermark(15),
-      MyWatermark(20)
+    val records = Seq[StreamElement](
+      MyRecord('a', 1),
+      MyRecord('b', 3),
+      MyRecord('c', 5),
+      MyRecord('d', 6, true),
+      MyWatermark(7),
+      MyWatermark(8),
+      MyWatermark(9),
+      MyWatermark(10)
     )
 
     env
@@ -33,17 +34,18 @@ object SlidingEventTimeWindow {
           case MyWatermark(timestamp) =>
             println(s"Generate a watermark @ $timestamp")
             context.emitWatermark(new Watermark(timestamp))
-            Thread.sleep(100)
+            Thread.sleep(200)
           case record@MyRecord(value, timestamp, _) =>
             println(s"$value @ $timestamp")
             context.collectWithTimestamp(record, timestamp)
-            Thread.sleep(100)
+            Thread.sleep(200)
         }
       )
-      .timeWindowAll(milliseconds(10), milliseconds(5))
+      .windowAll(EventTimeSessionWindows.withGap(milliseconds(3)))
+      .trigger(new TrackingEventTimeTrigger[MyRecord]())
       .apply(
         (window, iterator, collector: Collector[String]) =>
-          collector.collect(window + " triggered : " + iterator.mkString(","))
+          collector.collect(window.toString + " : " + iterator.mkString(", "))
       )
       .print()
 

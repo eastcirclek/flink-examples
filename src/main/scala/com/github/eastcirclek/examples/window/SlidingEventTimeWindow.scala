@@ -1,30 +1,31 @@
-package com.github.eastcirclek.trigger
+package com.github.eastcirclek.examples.window
 
-import com.github.eastcirclek.{MyRecord, MyWatermark, StreamElement}
+import com.github.eastcirclek.examples.{MyRecord, MyWatermark}
 import org.apache.flink.api.scala._
 import org.apache.flink.streaming.api.TimeCharacteristic
 import org.apache.flink.streaming.api.functions.source.SourceFunction.SourceContext
 import org.apache.flink.streaming.api.scala.StreamExecutionEnvironment
 import org.apache.flink.streaming.api.watermark.Watermark
-import org.apache.flink.streaming.api.windowing.assigners.EventTimeSessionWindows
 import org.apache.flink.streaming.api.windowing.time.Time._
 import org.apache.flink.util.Collector
 
-object SessionWindowWithDelayedEarlyResultTrigger {
+object SlidingEventTimeWindow {
   def main(args: Array[String]): Unit = {
     val env = StreamExecutionEnvironment.getExecutionEnvironment
     env.setParallelism(1)
     env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime)
 
-    val records = Seq[StreamElement](
-      MyRecord('a', 1),
-      MyRecord('b', 3),
-      MyRecord('d', 6, true),
-      MyRecord('c', 5),
-      MyWatermark(7),
-      MyWatermark(8),
-      MyWatermark(9),
-      MyWatermark(10)
+    // - Records, a@4, b@7, and c@12, are arriving out-of-order
+    // - TimeWindow{start=-5, end=5} is not going to be created
+    //     when 'a' arrives because the initial watermark is 5
+    val records = Seq(
+      MyWatermark(5),
+      MyRecord('b', 7),
+      MyRecord('a', 4),
+      MyWatermark(10),
+      MyRecord('c', 12),
+      MyWatermark(15),
+      MyWatermark(20)
     )
 
     env
@@ -40,11 +41,10 @@ object SessionWindowWithDelayedEarlyResultTrigger {
             Thread.sleep(200)
         }
       )
-      .windowAll(EventTimeSessionWindows.withGap(milliseconds(3)))
-      .trigger(new DelayedEarlyResultEventTimeTrigger[MyRecord](_.last, 2))
+      .timeWindowAll(milliseconds(10), milliseconds(5))
       .apply(
         (window, iterator, collector: Collector[String]) =>
-          collector.collect(window.toString + " : " + iterator.mkString(", "))
+          collector.collect(window + " triggered : " + iterator.mkString(","))
       )
       .print()
 

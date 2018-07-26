@@ -1,26 +1,27 @@
-package com.github.eastcirclek.trigger
+package com.github.eastcirclek.flink.trigger
 
 import org.apache.flink.streaming.api.windowing.triggers.{Trigger, TriggerResult}
 import org.apache.flink.streaming.api.windowing.windows.TimeWindow
 
-class TrackingEventTimeTrigger[T] extends Trigger[T, TimeWindow] {
+class DelayedEarlyResultEventTimeTrigger[T](eval: (T => Boolean), delay: Long = 0) extends Trigger[T, TimeWindow] {
   override def onElement(element: T, timestamp: Long, window: TimeWindow, ctx: Trigger.TriggerContext): TriggerResult = {
     if (window.maxTimestamp <= ctx.getCurrentWatermark) {
       TriggerResult.FIRE
     } else {
-      println(s"[onElement] $window - registerEventTimeTimer(${window.maxTimestamp})")
-      ctx.registerEventTimeTimer(window.maxTimestamp)
+      if (eval(element)) {
+        println(s"[onElement] $window - registerEventTimeTimer(${timestamp+delay} = ts_${timestamp} + delay_${delay})")
+        ctx.registerEventTimeTimer(timestamp + delay)
+      } else {
+        println(s"[onElement] $window - registerEventTimeTimer(${window.maxTimestamp})")
+        ctx.registerEventTimeTimer(window.maxTimestamp)
+      }
       TriggerResult.CONTINUE
     }
   }
 
   override def onEventTime(time: Long, window: TimeWindow, ctx: Trigger.TriggerContext): TriggerResult = {
     println(s"[onEventTime] $window $time")
-    if (time == window.maxTimestamp) {
-      TriggerResult.FIRE
-    } else {
-      TriggerResult.CONTINUE
-    }
+    TriggerResult.FIRE_AND_PURGE
   }
 
   override def onProcessingTime(time: Long, window: TimeWindow, ctx: Trigger.TriggerContext): TriggerResult = {
@@ -39,5 +40,5 @@ class TrackingEventTimeTrigger[T] extends Trigger[T, TimeWindow] {
     ctx.registerEventTimeTimer(window.maxTimestamp)
   }
 
-  override def toString = "EventTimeTrigger()"
+  override def toString = "DelayedEarlyResultEventTimeTrigger()"
 }

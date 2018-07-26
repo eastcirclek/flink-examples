@@ -1,4 +1,4 @@
-package com.github.eastcirclek
+package com.github.eastcirclek.examples
 
 trait StreamElement
 case class MyWatermark(timestamp: Long) extends StreamElement

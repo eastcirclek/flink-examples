@@ -1,6 +1,7 @@
-package com.github.eastcirclek.trigger
+package com.github.eastcirclek.examples.window.trigger
 
-import com.github.eastcirclek.{MyRecord, MyWatermark, StreamElement}
+import com.github.eastcirclek.examples.{MyRecord, MyWatermark, StreamElement}
+import com.github.eastcirclek.flink.trigger.EarlyResultEventTimeTrigger
 import org.apache.flink.api.scala._
 import org.apache.flink.streaming.api.TimeCharacteristic
 import org.apache.flink.streaming.api.functions.source.SourceFunction.SourceContext
@@ -10,7 +11,7 @@ import org.apache.flink.streaming.api.windowing.assigners.EventTimeSessionWindow
 import org.apache.flink.streaming.api.windowing.time.Time._
 import org.apache.flink.util.Collector
 
-object SessionWindowWithEarlyResultTrigger {
+object SessionWindowWithEarlyResultTrigger2 {
   def main(args: Array[String]): Unit = {
     val env = StreamExecutionEnvironment.getExecutionEnvironment
     env.setParallelism(1)
@@ -19,8 +20,8 @@ object SessionWindowWithEarlyResultTrigger {
     val records = Seq[StreamElement](
       MyRecord('a', 1),
       MyRecord('b', 3),
-      MyRecord('c', 5),
       MyRecord('d', 6, true),
+      MyRecord('c', 5),
       MyWatermark(7),
       MyWatermark(8),
       MyWatermark(9),

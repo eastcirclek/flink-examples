@@ -1,6 +1,7 @@
-package com.github.eastcirclek.trigger
+package com.github.eastcirclek.examples.window
 
-import com.github.eastcirclek.{MyRecord, MyWatermark, StreamElement}
+import com.github.eastcirclek.examples.{MyRecord, MyWatermark, StreamElement}
+import com.github.eastcirclek.flink.trigger.TrackingEventTimeTrigger
 import org.apache.flink.api.scala._
 import org.apache.flink.streaming.api.TimeCharacteristic
 import org.apache.flink.streaming.api.functions.source.SourceFunction.SourceContext
@@ -18,12 +19,8 @@ object SessionWindow {
 
     val records = Seq[StreamElement](
       MyRecord('a', 1),
-      MyRecord('b', 3),
-      MyRecord('c', 5),
-      MyRecord('d', 6, true),
-      MyWatermark(7),
-      MyWatermark(8),
-      MyWatermark(9),
+      MyRecord('c', 7),
+      MyRecord('b', 4),
       MyWatermark(10)
     )
 
@@ -41,7 +38,7 @@ object SessionWindow {
         }
       )
       .windowAll(EventTimeSessionWindows.withGap(milliseconds(3)))
-      .trigger(new TrackingEventTimeTrigger[MyRecord]())
+      .trigger(new TrackingEventTimeTrigger[MyRecord])
       .apply(
         (window, iterator, collector: Collector[String]) =>
           collector.collect(window.toString + " : " + iterator.mkString(", "))
