@@ -6,13 +6,14 @@ import org.apache.flink.streaming.api.windowing.windows.TimeWindow
 class EarlyResultEventTimeTrigger[T](eval: (T => Boolean)) extends Trigger[T, TimeWindow] {
   override def onElement(element: T, timestamp: Long, window: TimeWindow, ctx: Trigger.TriggerContext): TriggerResult = {
     if (window.maxTimestamp <= ctx.getCurrentWatermark) {
+      println(s"[onElement] $window - FIRE (allowed lateness)")
       TriggerResult.FIRE
     } else {
       if (eval(element)) {
-        println(s"[onElement] $window - FIRE_AND_PURGE")
+        println(s"[onElement] $window - FIRE (early emit)")
         TriggerResult.FIRE_AND_PURGE
       } else {
-        println(s"[onElement] $window - registerEventTimeTimer(${window.maxTimestamp})")
+        println(s"[onElement] $window registerTimer_${window.maxTimestamp} - CONTINUE")
         ctx.registerEventTimeTimer(window.maxTimestamp)
         TriggerResult.CONTINUE
       }
@@ -20,10 +21,11 @@ class EarlyResultEventTimeTrigger[T](eval: (T => Boolean)) extends Trigger[T, Ti
   }
 
   override def onEventTime(time: Long, window: TimeWindow, ctx: Trigger.TriggerContext): TriggerResult = {
-    println(s"[onEventTime] $window $time")
     if (time == window.maxTimestamp) {
+      println(s"[onEventTime] $window time_$time - FIRE (event time)")
       TriggerResult.FIRE
     } else {
+      println(s"[onEventTime] $window time_$time - CONTINUE")
       TriggerResult.CONTINUE
     }
   }
@@ -33,14 +35,14 @@ class EarlyResultEventTimeTrigger[T](eval: (T => Boolean)) extends Trigger[T, Ti
   }
 
   override def clear(window: TimeWindow, ctx: Trigger.TriggerContext): Unit = {
-    println(s"[clear] $window - deleteEventTimeTimer(${window.maxTimestamp})")
+    println(s"[clear] $window deleteTimer_${window.maxTimestamp}")
     ctx.deleteEventTimeTimer(window.maxTimestamp)
   }
 
   override def canMerge: Boolean = true
 
   override def onMerge(window: TimeWindow, ctx: Trigger.OnMergeContext): Unit = {
-    println(s"[onMerge] $window - registerEventTimeTimer(${window.maxTimestamp})")
+    println(s"[onMerge] $window registerTimer_${window.maxTimestamp}")
     ctx.registerEventTimeTimer(window.maxTimestamp)
   }
 
