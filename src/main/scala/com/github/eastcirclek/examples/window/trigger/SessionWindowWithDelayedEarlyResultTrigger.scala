@@ -42,7 +42,7 @@ object SessionWindowWithDelayedEarlyResultTrigger {
         }
       )
       .windowAll(EventTimeSessionWindows.withGap(milliseconds(3)))
-      .trigger(new DelayedEarlyResultEventTimeTrigger[MyRecord](_.last, 1))
+      .trigger(new DelayedEarlyResultEventTimeTrigger[MyRecord](_.last))
       .apply(
         (window, iterator, collector: Collector[String]) =>
           collector.collect(window.toString + " : " + iterator.mkString(", "))
