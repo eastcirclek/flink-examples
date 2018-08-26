@@ -7,9 +7,9 @@ import org.apache.flink.streaming.api.windowing.windows.TimeWindow
 import scala.collection.JavaConverters._
 
 class TrackingEarlyResultEventTimeTrigger[T](eval: (T => Boolean)) extends Trigger[T, TimeWindow] {
-  val timersDesc = new ListStateDescriptor[Long]("timersAcrossMerges", classOf[Long])
+  val timersDesc = new ListStateDescriptor[Long]("timers", classOf[Long])
   val countDesc = new AggregatingStateDescriptor("count", LongAdder.create(), classOf[Long])
-  val lastCountWhenFiringDesc = new AggregatingStateDescriptor("countWhenFiring", LongAdder.create(), classOf[Long])
+  val lastCountWhenFiringDesc = new AggregatingStateDescriptor("lastCount", LongAdder.create(), classOf[Long])
 
   override def onElement(element: T, timestamp: Long, window: TimeWindow, ctx: Trigger.TriggerContext): TriggerResult = {
     ctx.getPartitionedState(countDesc).add(1)
