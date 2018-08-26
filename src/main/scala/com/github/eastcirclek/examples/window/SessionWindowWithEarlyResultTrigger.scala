@@ -1,7 +1,7 @@
 package com.github.eastcirclek.examples.window
 
 import com.github.eastcirclek.examples.{MyRecord, MyWatermark, StreamElement}
-import com.github.eastcirclek.flink.trigger.EarlyResultEventTimeTrigger
+import com.github.eastcirclek.flink.trigger.TrackingEarlyResultEventTimeTrigger
 import org.apache.flink.api.scala._
 import org.apache.flink.streaming.api.TimeCharacteristic
 import org.apache.flink.streaming.api.functions.source.SourceFunction.SourceContext
@@ -58,7 +58,7 @@ object SessionWindowWithEarlyResultTrigger {
       .map(rec => (1, rec))
       .keyBy(0)
       .window(EventTimeSessionWindows.withGap(milliseconds(5)))
-      .trigger(new EarlyResultEventTimeTrigger[(Int, MyRecord)](_._2.last))
+      .trigger(new TrackingEarlyResultEventTimeTrigger[(Int, MyRecord)](_._2.last))
       .apply(
         (key, window, iterator, collector: Collector[String]) =>
           collector.collect("[apply] " + window.toString + " : " + iterator.map(_._2).mkString(", "))
