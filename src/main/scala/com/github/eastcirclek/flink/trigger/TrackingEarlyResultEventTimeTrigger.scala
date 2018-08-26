@@ -1,5 +1,6 @@
 package com.github.eastcirclek.flink.trigger
 
+import com.github.eastcirclek.flink.function.LongAdder
 import org.apache.flink.api.common.state.{AggregatingStateDescriptor, ListStateDescriptor}
 import org.apache.flink.streaming.api.windowing.triggers.{Trigger, TriggerResult}
 import org.apache.flink.streaming.api.windowing.windows.TimeWindow
