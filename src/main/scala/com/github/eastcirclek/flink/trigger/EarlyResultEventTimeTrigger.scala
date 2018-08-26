@@ -1,6 +1,6 @@
 package com.github.eastcirclek.flink.trigger
 
-import org.apache.flink.api.common.functions.AggregateFunction
+import com.github.eastcirclek.flink.function.LongAdder
 import org.apache.flink.api.common.state.{AggregatingStateDescriptor, ListStateDescriptor}
 import org.apache.flink.streaming.api.windowing.triggers.{Trigger, TriggerResult}
 import org.apache.flink.streaming.api.windowing.windows.TimeWindow
@@ -19,9 +19,8 @@ class EarlyResultEventTimeTrigger[T](eval: (T => Boolean)) extends Trigger[T, Ti
       fireOrContinue(ctx)
     } else {
       if (eval(element)) {
-        val timers = ctx.getPartitionedState(timersDesc)
-        timers.add(timestamp)
         ctx.registerEventTimeTimer(timestamp)
+        ctx.getPartitionedState(timersDesc).add(timestamp)
       }
       ctx.registerEventTimeTimer(window.maxTimestamp)
       TriggerResult.CONTINUE
@@ -83,15 +82,4 @@ class EarlyResultEventTimeTrigger[T](eval: (T => Boolean)) extends Trigger[T, Ti
   override def canMerge: Boolean = true
 
   override def toString = "EarlyResultEventTimeTrigger()"
-}
-
-object LongAdder {
-  def create(): AggregateFunction[Long, Long, Long] = {
-    new AggregateFunction[Long, Long, Long] {
-      override def add(n: Long, acc: Long): Long = n + acc
-      override def createAccumulator(): Long = 0
-      override def getResult(acc: Long): Long = acc
-      override def merge(n1: Long, n2: Long): Long = n1 + n2
-    }
-  }
 }
