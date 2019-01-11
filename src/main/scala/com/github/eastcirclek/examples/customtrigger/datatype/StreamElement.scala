@@ -1,4 +1,4 @@
-package com.github.eastcirclek.examples
+package com.github.eastcirclek.examples.customtrigger.datatype
 
 trait StreamElement
 case class MyWatermark(timestamp: Long) extends StreamElement

@@ -1,4 +1,4 @@
-package com.github.eastcirclek.flink.trigger
+package com.github.eastcirclek.examples.customtrigger.trigger
 
 import org.apache.flink.streaming.api.windowing.triggers.{Trigger, TriggerResult}
 import org.apache.flink.streaming.api.windowing.windows.TimeWindow

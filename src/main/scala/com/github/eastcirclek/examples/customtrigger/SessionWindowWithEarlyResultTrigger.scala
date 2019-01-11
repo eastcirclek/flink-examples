@@ -1,14 +1,13 @@
-package com.github.eastcirclek.examples.window
+package com.github.eastcirclek.examples.customtrigger
 
-import com.github.eastcirclek.examples.{MyRecord, MyWatermark, StreamElement}
-import com.github.eastcirclek.flink.trigger.TrackingEarlyResultEventTimeTrigger
-import org.apache.flink.api.scala._
+import com.github.eastcirclek.examples.customtrigger.datatype.{MyRecord, MyWatermark, StreamElement}
+import com.github.eastcirclek.examples.customtrigger.trigger.TrackingEarlyResultEventTimeTrigger
 import org.apache.flink.streaming.api.TimeCharacteristic
 import org.apache.flink.streaming.api.functions.source.SourceFunction.SourceContext
-import org.apache.flink.streaming.api.scala.StreamExecutionEnvironment
+import org.apache.flink.streaming.api.scala._
 import org.apache.flink.streaming.api.watermark.Watermark
 import org.apache.flink.streaming.api.windowing.assigners.EventTimeSessionWindows
-import org.apache.flink.streaming.api.windowing.time.Time._
+import org.apache.flink.streaming.api.windowing.time.Time.milliseconds
 import org.apache.flink.util.Collector
 
 object SessionWindowWithEarlyResultTrigger {
