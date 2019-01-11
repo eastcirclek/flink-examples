@@ -11,4 +11,5 @@ repositories {
 
 dependencies {
     compile 'org.apache.flink:flink-streaming-scala_2.11:1.7.0'
+    compile 'org.apache.flink:flink-table_2.11:1.7.0'
 }
